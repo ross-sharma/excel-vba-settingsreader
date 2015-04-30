@@ -1,9 +1,10 @@
 ' Written by Ross Sharma
 ' April 30, 2015
+' https://github.com/ross-sharma/excel-vba-settingsreader
 '
 ' ross.sharma86@gmail.com
 ' www.elance.com/s/rosssharma
-
+'
 ' v1.0
 
 Option Explicit
@@ -82,18 +83,16 @@ Public Function GetRangeByAddress(ByVal setting As String, ws As Worksheet) As R
 End Function
 
 Public Function GetCellByPosition(ByVal setting As String, ws As Worksheet) As Range
-    ' Setting must exist in the settings sheet as two cells, side by side. The left cell contains the row, the right cell contains the column.
-    ' Ex. A1 = "my_setting_name", A2 = 2, B2 = 5
-    ' This would return the cell at row 2, col 5.
+    ' Setting must exist in the settings sheet as two cells, side by side, to specify row and column.
     Dim values As Range
     Set values = GetSetting(setting)
     
     On Error GoTo handler
-    Set GetCellByPosition = ws.Cells(CLng(values.Cells(1, 1).Value), CLng(values.Cells(1, 2).Value))
+    Set GetCellByPosition = ws.Cells(CLng(values.Cells(1).Value), CLng(values.Cells(2).Value))
     Exit Function
     
 handler:
-    Err.Description = "Invalid value for setting " & setting & ". Must contain two numbers (row and column) on the same row."
+    Err.Description = "Invalid value for setting """ & setting & """. Must contain two numbers (row and column) on the same row."
     Err.Raise 1
 End Function
 
@@ -178,27 +177,22 @@ Public Function GetSetting(ByVal setting As String) As Range
     
     'the top-left value of the setting is directly to the right of the name
     Set topLeft = searchResult.Offset(0, 1)
-    If topLeft.Value = vbNullString Then
-        ' Setting is blank
-        Set GetSetting = topLeft
-    Else
-        'increment maxRow until we hit the either the next setting or an entirely blank row
-        'keep track of the right-most used cell as well so we know how wide the table is
-        maxRow = topLeft.row
-        rightMostPosition = pWorksheet.Cells(maxRow, pWorksheet.Columns.Count).End(xlToLeft).Column
-        maxCol = rightMostPosition
-        
-        Do Until pWorksheet.Cells(maxRow + 1, pWorksheet.Columns.Count).End(xlToLeft).Column = 1 Or pWorksheet.Cells(maxRow + 1, 1).Value <> vbNullString
-            rightMostPosition = pWorksheet.Cells(maxRow + 1, pWorksheet.Columns.Count).End(xlToLeft).Column
-            maxRow = maxRow + 1
-            If rightMostPosition > maxCol Then
-                maxCol = rightMostPosition
-            End If
-        Loop
-        
-        ' Compute the range of the setting
-        Set GetSetting = Range(topLeft, pWorksheet.Cells(maxRow, maxCol))
-    End If
+    'increment maxRow until we hit the either the next setting or an entirely blank row
+    'keep track of the right-most used cell as well so we know how wide the table is
+    maxRow = topLeft.row
+    rightMostPosition = pWorksheet.Cells(maxRow, pWorksheet.Columns.Count).End(xlToLeft).Column
+    maxCol = rightMostPosition
+    
+    Do Until pWorksheet.Cells(maxRow + 1, pWorksheet.Columns.Count).End(xlToLeft).Column = 1 Or pWorksheet.Cells(maxRow + 1, 1).Value <> vbNullString
+        rightMostPosition = pWorksheet.Cells(maxRow + 1, pWorksheet.Columns.Count).End(xlToLeft).Column
+        maxRow = maxRow + 1
+        If rightMostPosition > maxCol Then
+            maxCol = rightMostPosition
+        End If
+    Loop
+    
+    ' Compute the range of the setting
+    Set GetSetting = Range(topLeft, pWorksheet.Cells(maxRow, maxCol))
     
     ' Add setting to cache
     If pCacheEnabled Then
