@@ -1,11 +1,13 @@
 ' Written by Ross Sharma
-' April 30, 2015
+' ross.sharma86@gmail.com
+' Hire me at www.elance.com/s/rosssharma
+
+' This project is on GitHub
+' Submit your changes at:
 ' https://github.com/ross-sharma/excel-vba-settingsreader
 '
-' ross.sharma86@gmail.com
-' www.elance.com/s/rosssharma
-'
 ' v1.0
+' April 30, 2015
 
 Option Explicit
 
@@ -25,6 +27,13 @@ Private Sub Class_Initialize()
     pCacheEnabled = False
     pCaseSensitive = False
     pTestSettingPrefix = DEFAULT_TEST_SETTING_PREFIX
+End Sub
+
+Private Sub Class_Terminate()
+    If Not pCache Is Nothing Then
+        pCache.RemoveAll
+        Set pCache = Nothing
+    End If
 End Sub
 
 Public Property Let Worksheet(ws As Worksheet)
@@ -92,7 +101,7 @@ Public Function GetCellByPosition(ByVal setting As String, ws As Worksheet) As R
     Exit Function
     
 handler:
-    Err.Description = "Invalid value for setting """ & setting & """. Must contain two numbers (row and column) on the same row."
+    Err.Description = "Invalid value for setting """ & setting & """. Must contain two cells (specifying row and column)."
     Err.Raise 1
 End Function
 
@@ -257,6 +266,5 @@ End Function
 Private Function GetTestSettingName(setting As String) As String
     GetTestSettingName = pTestSettingPrefix & setting
 End Function
-
 
 
